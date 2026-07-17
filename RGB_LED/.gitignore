@@ -1,0 +1,21 @@
+# Arduino IDE files
+*.elf
+*.hex
+*.bin
+*.map
+
+# Build output
+build/
+*.o
+*.d
+*.a
+
+# IDE specific
+.vscode/
+*.code-workspace
+.DS_Store
+Thumbs.db
+
+# Credentials (if you add them to config.h)
+credentials.h
+secrets.h
