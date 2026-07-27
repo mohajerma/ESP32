@@ -9,6 +9,9 @@
 #include <FastLED.h>
 
 extern CRGB leds[];
+extern int activeLEDCount;       // Actual number of LEDs in use
+extern int activeMatrixWidth;    // Active matrix width
+extern int activeMatrixHeight;   // Active matrix height
 
 // Global effect variables
 static uint8_t gHue = 0;

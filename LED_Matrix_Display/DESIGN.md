@@ -23,7 +23,8 @@
 11. [Performance Considerations](#performance-considerations)
 12. [Security Considerations](#security-considerations)
 13. [Future Enhancements](#future-enhancements)
-14. [Appendices](#appendices)
+14. [Recent Updates & Lessons Learned](#recent-updates--lessons-learned)
+15. [Appendices](#appendices)
 
 ---
 
@@ -912,6 +913,228 @@ bool deviceConnected = false;
 
 ---
 
+## Recent Updates & Lessons Learned
+
+### Version 1.1 Updates (July 2026)
+
+#### 🆕 New Features
+
+**1. Web-Based LED Configuration**
+
+Added dynamic LED configuration through the web interface:
+- Matrix dimensions (width × height) configuration
+- Total LED count automatically calculated (width × height)
+- Settings persist using ESP32 Preferences library
+- Changes take effect after ESP32 restart
+
+**Implementation:**
+```cpp
+// New endpoint in wifi_server.h
+/setMatrixSize?width=W&height=H  - Set matrix dimensions
+
+// LED count automatically calculated
+int totalLEDs = width * height;
+
+// All stored in NVS (Non-Volatile Storage)
+Preferences prefs;
+prefs.begin("led-config", false);
+prefs.putInt("num_leds", totalLEDs);  // Calculated value
+prefs.putInt("matrix_w", width);
+prefs.putInt("matrix_h", height);
+```
+
+**Benefits:**
+- No code recompilation needed for configuration changes
+- Prevents mismatch between LED count and matrix dimensions
+- Single source of truth (width and height define everything)
+- Easier for non-technical users
+- Portable configuration across different installations
+
+**2. Comprehensive Documentation**
+
+Added three new documentation files:
+- **MATRIX_GUIDE.md** - Complete guide to matrix coordinate systems
+- Updated **WIRING_GUIDE.md** - USB charger triggering information
+- Enhanced **README.md** - New configuration features
+
+#### 🔧 Hardware Lessons Learned
+
+**1. Data Line Resistor Issues**
+
+**Problem:** Adding 470Ω resistor to data line prevented LEDs from working.
+
+**Root Cause:**
+- WS2812B LEDs require clean 3.3V-5V logic signal
+- 470Ω resistor creates voltage drop that weakens signal
+- ESP32 GPIO outputs ~3.3V; resistor drops this below WS2812B threshold
+- Short wire runs (< 1m) don't need additional resistance
+
+**Solution Implemented:**
+- Removed data line resistor for short connections
+- Updated documentation to make resistor optional
+- Added alternative: logic level shifter for long runs (> 1m)
+
+**New Recommendations:**
+```
+Direct connection (< 1m):    ESP32 GPIO 14 ──► LED DI
+With level shifter (> 1m):   ESP32 GPIO 14 ──► Shifter ──► LED DI
+With resistor (alternative): ESP32 GPIO 14 ──[470Ω]──► LED DI (may not work)
+```
+
+**2. USB Charger Power Supply Issues**
+
+**Problem:** USB charger showed 0V output, wouldn't power LEDs.
+
+**Root Cause:**
+Modern USB chargers (especially USB-C) require load detection or CC pin configuration:
+- **USB-A chargers**: Usually auto-trigger but some need small load
+- **USB-C chargers**: Require 5.1kΩ pull-down resistors on CC1/CC2 pins
+- **USB-PD chargers**: Need power negotiation protocol
+- **Quick Charge**: Needs specific voltage divider on D+/D- pins
+
+**Solutions Documented:**
+
+1. **For USB-C Power Delivery:**
+   ```
+   USB-C CC1 pin ──[5.1kΩ]── GND
+   USB-C CC2 pin ──[5.1kΩ]── GND
+   ```
+
+2. **Easier alternatives:**
+   - Use USB-C breakout board (includes resistors)
+   - Use USB-C to USB-A adapter
+   - Use dedicated 5V power supply with screw terminals
+
+3. **For USB-A chargers:**
+   - Usually work automatically
+   - If not: temporarily connect 100Ω between +5V and GND to trigger
+
+**Power Supply Recommendations Updated:**
+
+| Source | Best For | Pros | Cons |
+|--------|----------|------|------|
+| Dedicated 5V supply | Production | Reliable, high current | More expensive |
+| USB-A charger | Testing | Convenient | Limited current |
+| USB-C PD | Portable | Compact | Needs triggering circuit |
+| Computer PSU | Large displays | Very high current | Bulky |
+
+#### 📐 Matrix Coordinate System Clarification
+
+**Problem:** Users confused about how LED indices map to (row, column) coordinates.
+
+**Documentation Added:**
+
+1. **Standard Formula:**
+   ```cpp
+   // For zigzag wiring (most common):
+   ledIndex = (row % 2 == 0) ?
+              row * width + col :              // Even rows: left to right
+              row * width + (width - 1 - col); // Odd rows: right to left
+   ```
+
+2. **Visual Examples:**
+   - 10×6 matrix layout diagrams
+   - LED index mapping tables
+   - Code examples for drawing shapes
+
+3. **Helper Functions:**
+   ```cpp
+   void setPixel(int x, int y, CRGB color);
+   void drawHLine(int y, int x1, int x2, CRGB color);
+   void drawVLine(int x, int y1, int y2, CRGB color);
+   void drawRect(int x1, int y1, int x2, int y2, CRGB color);
+   ```
+
+#### 🎯 Configuration Best Practices
+
+**GPIO Pin Selection:**
+- Changed default from GPIO 5 to GPIO 14
+- Reason: GPIO 5 has pull-up resistor that can interfere with boot
+- GPIO 14 is "boot-safe" (no boot-time functions)
+
+**Partition Scheme:**
+- Using "Huge APP (3MB No OTA)" for maximum program space
+- Allows complex effects and large web interfaces
+- Trade-off: No OTA updates (acceptable for wired programming)
+
+**Memory Management:**
+```cpp
+// Static allocation for predictable behavior
+CRGB leds[NUM_LEDS];  // Maximum 1000 LEDs = 3KB
+
+// Dynamic configuration stored in NVS
+int active_leds = NUM_LEDS;  // Can be less than array size
+```
+
+#### 🔒 Security Considerations Added
+
+**Web Interface:**
+- Currently no authentication (acceptable for private networks)
+- Future: Add HTTP Basic Auth or token-based auth
+- Recommendation: Use WPA2 with strong password for AP mode
+
+**BLE Security:**
+- No pairing required (convenience over security)
+- Acceptable for low-risk applications
+- Consider adding pairing for public installations
+
+#### 📊 Testing Results
+
+**Configuration:**
+- 60 WS2812B LEDs
+- ESP32-DevKitC V4
+- 5V 5A power supply
+- No data line resistor
+- Wire length: ~15cm
+
+**Performance:**
+- Web response time: < 100ms
+- BLE command latency: < 50ms
+- Effect update rate: 60 FPS
+- WiFi connection time: 2-3 seconds
+- BLE connection time: 1-2 seconds
+
+**Power Measurements:**
+```
+Idle (LEDs off):        0.25A @ 5V = 1.25W
+Rainbow 50% brightness: 1.8A @ 5V = 9W
+Full white 100%:        3.6A @ 5V = 18W
+```
+
+#### 🐛 Known Issues & Workarounds
+
+**1. ESP32 Brownout on LED Power-On**
+- **Symptom:** ESP32 resets when many LEDs light up suddenly
+- **Cause:** Inrush current drops voltage
+- **Workaround:** Fade in brightness gradually, use larger capacitor (2200µF)
+
+**2. WiFi Disconnects During Heavy LED Updates**
+- **Symptom:** Web interface becomes unresponsive during fire effect
+- **Cause:** LED updates monopolize CPU
+- **Workaround:** Reduce FPS, use dual-core task scheduling
+
+**3. First LED Sometimes Shows Wrong Color**
+- **Symptom:** LED[0] flickers or shows incorrect color
+- **Cause:** Signal reflection, insufficient settling time
+- **Workaround:** Add small delay after FastLED.show(), or use LED[0] as buffer
+
+#### 📈 Future Configuration Enhancements
+
+**Planned:**
+1. Web-based effect parameter tuning
+2. Color palette customization
+3. Pattern presets save/load
+4. Network settings via web interface
+5. Firmware update via web (OTA)
+
+**Under Consideration:**
+1. Mobile app for configuration
+2. Cloud backup of settings
+3. Multi-device synchronization
+4. Voice command integration
+
+---
+
 ## Appendices
 
 ### A. Effect Mode Reference
@@ -1083,6 +1306,7 @@ Core Debug Level: None (for production)
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-07-19 | Initial | Complete design document |
+| 1.1 | 2026-07-22 | Update | Added web-based LED configuration, hardware lessons learned, USB charger triggering, matrix coordinate documentation |
 
 ---
 

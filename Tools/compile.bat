@@ -1,0 +1,1 @@
+.\Tools\arduino-cli.exe compile --fqbn esp32:esp32:esp32:PartitionScheme=huge_app LED_Matrix_Display

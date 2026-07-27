@@ -13,7 +13,16 @@
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
+#include <Preferences.h>
 #include "config.h"
+
+// LED array
+CRGB leds[NUM_LEDS];
+
+// Active LED configuration (can differ from NUM_LEDS if set via web interface)
+int activeLEDCount = NUM_LEDS;
+int activeMatrixWidth = MATRIX_WIDTH;
+int activeMatrixHeight = MATRIX_HEIGHT;
 
 // Forward declarations
 void setMode(String mode);
@@ -25,9 +34,6 @@ void updateDisplay();
 #include "led_effects.h"
 #include "wifi_server.h"
 #include "ble_server.h"
-
-// LED array
-CRGB leds[NUM_LEDS];
 
 // Current display mode
 String currentMode = "rainbow";
@@ -49,6 +55,9 @@ void setup() {
   Serial.println("\n=================================");
   Serial.println("LED Matrix Display Controller");
   Serial.println("=================================\n");
+  
+  // Load saved configuration from NVS
+  loadConfiguration();
   
   // Initialize LED strip
   initLEDs();
@@ -85,14 +94,54 @@ void loop() {
   delay(10);
 }
 
+// Load configuration from NVS (persistent storage)
+void loadConfiguration() {
+  Preferences prefs;
+  prefs.begin("led-config", true); // Read-only
+  
+  // Load saved matrix dimensions
+  int savedWidth = prefs.getInt("matrix_w", 0);
+  int savedHeight = prefs.getInt("matrix_h", 0);
+  int savedNumLEDs = prefs.getInt("num_leds", 0);
+  
+  prefs.end();
+  
+  // Use saved values if available, otherwise use config.h defaults
+  if (savedWidth > 0 && savedHeight > 0 && savedNumLEDs > 0) {
+    activeMatrixWidth = savedWidth;
+    activeMatrixHeight = savedHeight;
+    activeLEDCount = savedNumLEDs;
+    
+    // Validate against array size
+    if (activeLEDCount > MAX_LEDS) {
+      Serial.println("⚠️  WARNING: Saved LED count exceeds array capacity!");
+      Serial.printf("   Saved: %d LEDs, Array capacity: %d LEDs\n", activeLEDCount, MAX_LEDS);
+      Serial.println("   Using array capacity instead. Update MAX_LEDS in config.h for more LEDs.");
+      activeLEDCount = MAX_LEDS;
+    }
+    
+    Serial.println("✓ Loaded saved configuration from NVS:");
+  } else {
+    // No saved config, use defaults from config.h
+    activeLEDCount = NUM_LEDS;
+    activeMatrixWidth = MATRIX_WIDTH;
+    activeMatrixHeight = MATRIX_HEIGHT;
+    Serial.println("✓ Using default configuration from config.h:");
+  }
+  
+  Serial.printf("  Matrix: %dx%d\n", activeMatrixWidth, activeMatrixHeight);
+  Serial.printf("  Total LEDs: %d\n", activeLEDCount);
+  Serial.printf("  Array capacity: %d\n\n", MAX_LEDS);
+}
+
 // Initialize LED strip
 void initLEDs() {
   Serial.println("Initializing LED strip...");
   
   #ifdef LED_PIN
-    FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
+    FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, activeLEDCount);
   #else
-    FastLED.addLeds<LED_TYPE, LED_DATA_PIN, LED_CLOCK_PIN, COLOR_ORDER>(leds, NUM_LEDS);
+    FastLED.addLeds<LED_TYPE, LED_DATA_PIN, LED_CLOCK_PIN, COLOR_ORDER>(leds, activeLEDCount);
   #endif
   
   FastLED.setBrightness(brightness);
@@ -100,7 +149,7 @@ void initLEDs() {
   FastLED.show();
   
   // Startup animation
-  for(int i = 0; i < NUM_LEDS; i++) {
+  for(int i = 0; i < activeLEDCount; i++) {
     leds[i] = CRGB::Blue;
     FastLED.show();
     delay(20);
@@ -109,7 +158,7 @@ void initLEDs() {
   FastLED.show();
   
   Serial.println("LED strip initialized!");
-  Serial.printf("Number of LEDs: %d\n", NUM_LEDS);
+  Serial.printf("Active LEDs: %d\n", activeLEDCount);
 }
 
 // Update the LED display based on current mode

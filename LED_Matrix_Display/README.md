@@ -19,11 +19,17 @@ An advanced ESP32 project for controlling addressable RGB LED strips with moving
 - **5V Power Supply** (sufficient amperage for your LED count)
   - Rule of thumb: 60mA per LED at full brightness
   - Example: 60 LEDs = 3.6A minimum
+  - ⚠️ USB chargers may need triggering - see [Wiring Guide](WIRING_GUIDE.md#usb-charger-triggering)
 - **1000µF Capacitor** (recommended for power stability)
-- **470Ω Resistor** (for data line protection)
 - **Jumper Wires**
 
+**Note on Data Line Resistor:**
+- A 470Ω resistor is traditionally recommended but may cause signal issues
+- For short wire runs (< 1m), resistor can be omitted
+- See [Wiring Guide](WIRING_GUIDE.md) for details
+
 ### Optional Components
+- 470Ω Resistor (for data line, may not be needed)
 - Logic level shifter (3.3V to 5V) for better signal integrity
 - Heat sink for ESP32 (if running high-power applications)
 
@@ -45,7 +51,10 @@ GND -----------------------------> GND
 - **Never power LED strips directly from ESP32** - Use an external 5V power supply
 - Connect all grounds together (ESP32, LEDs, and power supply)
 - Add a 1000µF capacitor across the power supply terminals
-- Use a 470Ω resistor on the data line for protection
+- Data line resistor is optional - see [Wiring Guide](WIRING_GUIDE.md#step-4-data-line-connection)
+- USB chargers may require triggering - see [Wiring Guide](WIRING_GUIDE.md#usb-charger-triggering)
+
+**📖 Complete wiring instructions: [WIRING_GUIDE.md](WIRING_GUIDE.md)**
 
 ## 🛠️ Software Setup
 
@@ -108,10 +117,11 @@ The following libraries should be pre-installed with ESP32 board support:
 ### WiFi Web Interface
 
 1. After uploading, open Serial Monitor (115200 baud)
-2. Note the IP address displayed (e.g., `192.168.1.100`)
-3. Open a web browser and go to: `http://192.168.1.100`
-4. Use the web interface to:
-   - Select display modes
+2. Note the IP address di (rainbow, fire, confetti, etc.)
+   - Enter scrolling text
+   - Adjust brightness (0-255)
+   - Change animation speed
+   - **🆕 Configure LED count and matrix dimensions** (requires restart)
    - Enter scrolling text
    - Adjust brightness (0-255)
    - Change animation speed
@@ -167,16 +177,31 @@ MODE:scroll_text
 | **Off** | All LEDs turned off |
 
 ## ⚙️ Advanced Configuration
+LED Configuration via Web Interface 🆕
+
+You can now configure LED matrix settings through the web interface:
+
+1. **Matrix Dimensions**: Set width and height for matrix layouts
+2. **Total LEDs**: Automatically calculated as width × height
+3. Changes are saved and applied after ESP32 restart
+
+**Note**: These settings override values in `config.h` after first configuration.
 
 ### Matrix Display Setup
 
-If you're using LEDs arranged in a 2D matrix:
+If you're using LEDs arranged in a 2D matrix (grid):
 
 ```cpp
 // In config.h
 #define MATRIX_WIDTH 10
 #define MATRIX_HEIGHT 6
 #define MATRIX_TYPE VERTICAL_ZIGZAG
+```
+
+**Understanding Matrix Coordinates:**
+- See [MATRIX_GUIDE.md](MATRIX_GUIDE.md) for complete explanation
+- Formula: `ledIndex = row * MATRIX_WIDTH + column`
+- Supports zigzag and straight wiring patternsfine MATRIX_TYPE VERTICAL_ZIGZAG
 ```
 
 ### Power Optimization
@@ -191,14 +216,16 @@ For battery operation, reduce brightness:
 ### Access Point Mode
 
 To create a standalone WiFi network:
+   - ⚠️ USB chargers may need triggering (see [Wiring Guide](WIRING_GUIDE.md))
 
-```cpp
-#define AP_MODE true
-#define AP_SSID "LED_Controller"
-#define AP_PASSWORD "12345678"
-```
+2. **Verify wiring**
+   - Data line to correct GPIO pin (default: GPIO 14)
+   - Check LED strip polarity (5V, GND, DI)
+   - **Try removing data line resistor if present**
 
-Then connect to the WiFi network and visit: `http://192.168.4.1`
+3. **Check config.h**
+   - Correct `NUM_LEDS` value
+   - Correct `LED_PIN` (default GPIO 14isit: `http://192.168.4.1`
 
 ## 🐛 Troubleshooting
 
@@ -297,7 +324,17 @@ effectTheaterChase(CRGB color) // Theater chase
 effectColorWipe(CRGB color)    // Color wipe
 ```
 
-## 📄 License
+## � Documentation
+
+This project includes comprehensive guides:
+
+- **[README.md](README.md)** - Main documentation (this file)
+- **[WIRING_GUIDE.md](WIRING_GUIDE.md)** - Complete wiring instructions, power supply options, USB charger triggering
+- **[MATRIX_GUIDE.md](MATRIX_GUIDE.md)** - Matrix coordinate system explained with examples
+- **[DESIGN.md](DESIGN.md)** - Project architecture and design decisions
+- **[config.h](config.h)** - Configuration file with inline comments
+
+## �📄 License
 
 This project is open source and available for personal and educational use.
 

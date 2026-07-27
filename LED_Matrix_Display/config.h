@@ -10,8 +10,15 @@
 // LED Strip Configuration
 // ========================
 
-// Number of LEDs in your strip
-#define NUM_LEDS 60
+// Maximum LEDs supported (array size - allocate generously)
+#define MAX_LEDS 512
+
+// Matrix dimensions (for grid layouts)
+#define MATRIX_WIDTH 12   // Number of LEDs wide
+#define MATRIX_HEIGHT 12   // Number of LEDs tall
+
+// Total number of LEDs (calculated from matrix dimensions)
+#define NUM_LEDS (MATRIX_WIDTH * MATRIX_HEIGHT)
 
 // LED strip type (WS2812B, WS2811, SK6812, etc.)
 #define LED_TYPE WS2812B
@@ -20,7 +27,7 @@
 #define COLOR_ORDER GRB
 
 // For 3-wire LEDs (WS2812B, WS2811, etc.)
-#define LED_PIN 18  // GPIO pin connected to LED strip data line
+#define LED_PIN 14  // GPIO pin connected to LED strip data line
 
 // For 4-wire LEDs (APA102, SK9822, etc.) - uncomment if needed
 // #define LED_DATA_PIN 5
@@ -30,7 +37,7 @@
 #define MAX_BRIGHTNESS 255
 
 // Default brightness (0-255)
-#define DEFAULT_BRIGHTNESS 128
+#define DEFAULT_BRIGHTNESS 40
 
 // ========================
 // WiFi Configuration
@@ -74,9 +81,7 @@
 // Default scroll speed (milliseconds between updates)
 #define DEFAULT_SCROLL_SPEED 50
 
-// For matrix displays (if arranging LEDs in a grid)
-#define MATRIX_WIDTH 10   // Number of LEDs wide
-#define MATRIX_HEIGHT 6   // Number of LEDs tall
+// Matrix layout type
 #define MATRIX_TYPE VERTICAL_ZIGZAG  // or HORIZONTAL_STRAIGHT, etc.
 
 // ========================

@@ -14,8 +14,16 @@ Complete guide for connecting your ESP32, LED strip, and power supply safely.
 ### Recommended Components
 - **1000µF Capacitor** (16V or higher, electrolytic)
 - **Logic Level Shifter** (3.3V to 5V) - optional but improves reliability
+- **470Ω Resistor** (for data line protection) - optional, see note below
 - **Heat shrink tubing** or electrical tape for insulation
 - **Screw terminal blocks** for secure power connections
+
+**⚠️ Note on Data Line Resistor:**
+- The 470Ω resistor is traditionally recommended for data line protection
+- However, **it may cause signal issues** with some WS2812B strips
+- **For short wire runs (< 1m)**, the resistor can be omitted
+- If LEDs don't work with resistor, try removing it
+- For long wire runs (> 1m), use a logic level shifter instead
 
 ---
 
@@ -101,14 +109,21 @@ Power Supply (GND) ──┬──► LED Strip (GND)
 
 ### Step 4: Data Line Connection
 
-1. Connect **470Ω resistor** to ESP32 **GPIO 5** pin
-2. Connect other end of resistor to LED strip **DI (Data In)** pin
-3. Keep data wire away from power wires to reduce interference
+**Option A: Direct Connection (Recommended for short distances)**
+1. Connect ESP32 **GPIO 14** pin directly to LED strip **DI (Data In)** pin
+2. Keep data wire away from power wires to reduce interference
+3. Works well for wire lengths < 1 meter
 
-**Optional Improvement: Logic Level Shifter**
+**Option B: With Resistor (Optional protection)**
+1. Connect **470Ω resistor** to ESP32 **GPIO 14** pin
+2. Connect other end of resistor to LED strip **DI (Data In)** pin
+3. ⚠️ If LEDs don't light up, remove resistor and try Option A
+
+**Option C: Logic Level Shifter (Best for long distances)**
 ```
-ESP32 GPIO 5 ──► Level Shifter (3.3V → 5V) ──► LED Strip DI
+ESP32 GPIO 14 ──► Level Shifter (3.3V → 5V) ──► LED Strip DI
 ```
+Use for wire runs > 1 meter or for maximum reliability
 
 ### Step 5: Final Checks Before Power-On
 
@@ -135,7 +150,29 @@ ESP32 GPIO 5 ──► Level Shifter (3.3V → 5V) ──► LED Strip DI
 
 **Where to use:**
 - Permanent installations
-- Maximum brightness needed
+- Maximum brightness needed OR USB breakout board
+
+**⚠️ Important: USB Charger Triggering**
+
+Many USB chargers (especially USB-C) need to detect a proper load before outputting power:
+
+**USB-A Chargers:**
+- Usually trigger automatically when connected
+- If not working, try connecting a small load (100Ω resistor) between +5V and GND temporarily
+
+**USB-C Chargers (PD/Quick Charge):**
+- Require 5.1kΩ pull-down resistors on CC (Configuration Channel) pins:
+  ```
+  USB-C CC1 pin ──[5.1kΩ resistor]── GND
+  USB-C CC2 pin ──[5.1kΩ resistor]── GND
+  ```
+- **Easier solution**: Use a USB-C breakout board (like Adafruit #4090) that includes these resistors
+- Or use a USB-C to USB-A adapter (which handles this automatically)
+
+**Testing your USB charger:**
+1. Use a multimeter to check voltage between +5V and GND
+2. Should read 4.75V - 5.25V when active
+3. If 0V, charger needs triggering (see above solutions)
 - Large LED counts (100+)
 
 ### Option 2: USB Charger (Limited Use)
