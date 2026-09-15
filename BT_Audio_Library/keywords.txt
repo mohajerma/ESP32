@@ -1,0 +1,40 @@
+#######################################
+# Syntax Coloring Map For BT_Audio_Receiver
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+BT_Audio_Receiver	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+end	KEYWORD2
+setupI2S	KEYWORD2
+useInternalDAC	KEYWORD2
+setDeviceName	KEYWORD2
+getDeviceName	KEYWORD2
+isConnected	KEYWORD2
+setVolume	KEYWORD2
+getVolume	KEYWORD2
+onDataReceived	KEYWORD2
+onConnectionStateChanged	KEYWORD2
+onAudioStateChanged	KEYWORD2
+getBluetoothAddress	KEYWORD2
+disconnect	KEYWORD2
+reconnect	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+BT_AUDIO_DEFAULT_DEVICE_NAME	LITERAL1
+BT_AUDIO_DEFAULT_SAMPLE_RATE	LITERAL1
+BT_AUDIO_DEFAULT_BITS_PER_SAMPLE	LITERAL1
+I2S_DEFAULT_BCK_IO	LITERAL1
+I2S_DEFAULT_WS_IO	LITERAL1
+I2S_DEFAULT_DATA_OUT	LITERAL1
