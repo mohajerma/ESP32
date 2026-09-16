@@ -16,11 +16,11 @@
 #endif
 
 // Set USE_ACCESS_POINT to 0 to join an existing WiFi network instead.
-#define USE_ACCESS_POINT 1
-#define WIFI_SSID "StepperBench"
-#define WIFI_PASSWORD "stepper123"
-#define STA_SSID "your-wifi-name"
-#define STA_PASSWORD "your-wifi-password"
+#define USE_ACCESS_POINT 0
+#define WIFI_SSID "Mohajer"
+#define WIFI_PASSWORD "gdlamborgini"
+#define STA_SSID "Mohajer"
+#define STA_PASSWORD "gdlamborgini"
 #define AP_CHANNEL 6
 
 // GPIO numbers, not board labels. These are shared by common NodeMCU and ESP32 DevKit boards.

@@ -1,5 +1,7 @@
 C:\code\ESP32\Tools\arduino-cli.exe compile --fqbn esp32:esp32:esp32 .
 
+C:\code\ESP32\Tools\arduino-cli.exe compile --fqbn esp8266:esp8266:generic .
+
 C:\code\ESP32\Tools\arduino-cli.exe compile --fqbn esp32:esp32:esp32 --library C:\code\ESP32\arduino-audio-tools\src .
 
 C:\code\ESP32\Tools\arduino-cli.exe compile --fqbn esp32:esp32:esp32 --library C:\code\ESP32\RDA5807\src --library C:\code\ESP32\arduino-audio-tools\src .
